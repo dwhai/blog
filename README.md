@@ -1,97 +1,153 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 项目结构说明
 
-# Getting Started
+本项目采用模块化和组件化的架构设计，便于维护和扩展。
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 目录结构
 
-## Step 1: Start Metro
-
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
-
-To start the Metro dev server, run the following command from the root of your React Native project:
-
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+```
+src/
+├── core/                    # 核心配置
+│   ├── config/             # 配置文件（API 配置等）
+│   ├── constants/          # 常量定义
+│   └── navigation/         # 导航配置
+├── modules/                # 业务模块
+│   ├── home/              # 首页模块
+│   ├── auth/              # 认证模块
+│   ├── category/          # 分类模块
+│   ├── archive/           # 归档模块
+│   ├── label/             # 标签模块
+│   └── leave/             # 留言模块
+└── shared/                # 共享资源
+    ├── components/        # 共享组件
+    ├── services/          # 共享服务（API 封装等）
+    ├── styles/            # 共享样式
+    └── utils/             # 工具函数
 ```
 
-## Step 2: Build and run your app
+## 模块结构
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+每个模块都遵循相同的目录结构：
 
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```
+module/
+├── components/            # 模块专用组件
+├── hooks/                # 自定义 Hooks
+├── screens/              # 页面组件
+├── services/             # 模块服务（API 调用）
+└── index.ts              # 模块统一导出
 ```
 
-### iOS
+## 核心功能
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+### 1. API 请求封装
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+位置：`src/shared/services/api/`
 
-```sh
-bundle install
+- **request.ts**: Axios 封装，包含请求/响应拦截器、错误处理
+- **types.ts**: API 相关类型定义
+- **base.service.ts**: 基础服务类，提供通用的 CRUD 方法
+
+使用示例：
+
+```typescript
+import { apiRequest } from '@/shared/services/api';
+
+// GET 请求
+const data = await apiRequest.get('/api/users');
+
+// POST 请求
+const result = await apiRequest.post('/api/users', { name: 'John' });
 ```
 
-Then, and every time you update your native dependencies, run:
+### 2. 模块服务
 
-```sh
-bundle exec pod install
+每个模块都有自己的服务类，继承自 `BaseService`：
+
+```typescript
+import { BaseService } from '@/shared/services/base.service';
+
+class HomeService extends BaseService {
+  constructor() {
+    super('/home');
+  }
+
+  async getHomeData() {
+    return this.getList<HomeData>('');
+  }
+}
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+### 3. 自定义 Hooks
 
-```sh
-# Using npm
-npm run ios
+每个模块提供自定义 Hooks 用于数据获取和状态管理：
 
-# OR using Yarn
-yarn ios
+```typescript
+import { useHome } from '@/modules/home';
+
+const { data, loading, error, refetch } = useHome();
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+### 4. 共享组件
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+位置：`src/shared/components/`
 
-## Step 3: Modify your app
+- **Loading**: 加载组件
+- **ErrorView**: 错误视图组件
+- **EmptyView**: 空状态组件
 
-Now that you have successfully run the app, let's make changes!
+## 使用指南
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+### 添加新模块
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+1. 在 `src/modules/` 下创建新模块目录
+2. 按照标准结构创建子目录（components, hooks, screens, services）
+3. 创建服务类继承 `BaseService`
+4. 创建自定义 Hooks
+5. 创建页面和组件
+6. 在模块根目录创建 `index.ts` 统一导出
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+### 添加新的 API 接口
 
-## Congratulations! :tada:
+1. 在对应模块的 `services/` 目录下的服务类中添加方法
+2. 在 `hooks/` 中创建或更新对应的 Hook
+3. 在页面或组件中使用 Hook
 
-You've successfully run and modified your React Native App. :partying_face:
+### 使用共享组件
 
-### Now what?
+```typescript
+import { Loading, ErrorView, EmptyView } from '@/shared/components';
+```
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+### 使用工具函数
 
-# Troubleshooting
+```typescript
+import { formatDate, debounce, throttle } from '@/shared/utils';
+```
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+## 配置说明
 
-# Learn More
+### API 配置
 
-To learn more about React Native, take a look at the following resources:
+编辑 `src/core/config/api.config.ts` 来配置不同环境的 API 地址：
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+```typescript
+export const API_CONFIG = {
+  development: {
+    baseURL: 'http://localhost:3000/api',
+    timeout: 10000,
+  },
+  production: {
+    baseURL: 'https://api.example.com',
+    timeout: 10000,
+  },
+};
+```
+
+## 注意事项
+
+1. 所有模块都应该通过 `index.ts` 统一导出
+2. 共享资源放在 `shared/` 目录下
+3. 模块之间应该保持独立，避免直接依赖
+4. 使用 TypeScript 类型定义，确保类型安全
+5. 遵循 React Native 最佳实践
+
